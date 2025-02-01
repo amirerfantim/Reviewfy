@@ -1,0 +1,29 @@
+from decimal import Decimal
+
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class Article(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    ratings_count = models.PositiveIntegerField(default=0)
+    avg_rating = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('0.00'))
+
+    def __str__(self):
+        return self.title
+
+
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    score = models.IntegerField(choices=[(i, i) for i in range(6)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'article')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.article.title} - {self.score}"
