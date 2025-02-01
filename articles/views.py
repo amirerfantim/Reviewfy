@@ -7,13 +7,37 @@ from .models import Rating, Article
 from .serializers import RatingSerializer
 from rest_framework.response import Response
 from rest_framework import status
-import redis
 
 
 class ArticleListView(generics.ListAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        articles = self.get_queryset()
+        response_data = []
+
+        for article in articles:
+            ratings_count = article.ratings_count
+            avg_rating = article.avg_rating
+
+            try:
+                user_rating_obj = Rating.objects.get(article=article, user=request.user)
+                user_rating = user_rating_obj.score
+            except Rating.DoesNotExist:
+                user_rating = "No rating"
+
+            article_data = {
+                "title": article.title,
+                "ratings_count": ratings_count,
+                "avg_rating": float(avg_rating),
+                "user_rating": user_rating
+            }
+
+            response_data.append(article_data)
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class ArticleCreateView(generics.CreateAPIView):
