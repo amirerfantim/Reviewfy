@@ -1,6 +1,14 @@
+import datetime
+import logging
 from decimal import Decimal
+
+import numpy as np
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Article(models.Model):
@@ -26,6 +34,7 @@ class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     score = models.IntegerField(choices=[(i, i) for i in range(6)])
+    suspicion_factor = models.FloatField(default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -40,8 +49,65 @@ class Rating(models.Model):
         if previous_rating:
             rating_diff = int(score) - previous_rating.score
             previous_rating.score = int(score)
-            previous_rating.save()
+            previous_rating.suspicion_factor = previous_rating.calculate_suspicion()
+            previous_rating.save(update_fields=['score', 'suspicion_factor'])
             return rating_diff, 0
         else:
-            cls.objects.create(user_id=user_id, article=article, score=int(score))
+            new_rating = cls.objects.create(user_id=user_id, article=article, score=int(score))
+            new_rating.suspicion_factor = new_rating.calculate_suspicion()
+            new_rating.save(update_fields=['suspicion_factor'])
             return int(score), 1
+
+    def calculate_suspicion(self):
+        suspicion_factor = 0.0
+
+        now = timezone.now()
+        one_hour_ago_yesterday = now - datetime.timedelta(days=1, hours=1)
+        one_hour_end_yesterday = now - datetime.timedelta(days=1)
+
+        today_ratings_count = Rating.objects.filter(
+            article=self.article, created_at__gte=one_hour_ago_yesterday
+        ).count()
+
+        past_ratings_count = Rating.objects.filter(
+            article=self.article, created_at__gte=one_hour_ago_yesterday, created_at__lt=one_hour_end_yesterday
+        ).count()
+
+        if past_ratings_count > 0:
+            ratings_diff = today_ratings_count - past_ratings_count
+            percentage_diff = abs(ratings_diff / past_ratings_count) * 100
+
+            if percentage_diff > 100:
+                suspicion_factor += min(np.log(percentage_diff / 100) / 5, 0.5)
+
+        user_recent_ratings = Rating.objects.filter(
+            user=self.user
+        ).order_by('-created_at')[:10]
+
+        zero_five_count = sum([1 for rating in user_recent_ratings if rating.score == 0 or rating.score == 5])
+        if zero_five_count > 0:
+            suspicion_factor += min(zero_five_count * 0.05, 0.3)
+
+        logger.info(
+            f"zero five count {zero_five_count}")
+
+        recent_ratings = Rating.objects.filter(
+            article=self.article,
+            created_at__gte=timezone.now() - datetime.timedelta(days=7)
+        ).values('score')
+
+        if len(recent_ratings) > 2:
+            scores = [rating['score'] for rating in recent_ratings]
+            mean_score = np.mean(scores)
+            std_dev = np.std(scores)
+
+            if abs(self.score - mean_score) > std_dev:
+                suspicion_factor += min((abs(self.score - mean_score) / std_dev) * 0.1, 0.5)
+
+            logger.info(
+                f"recent {recent_ratings}, mean_score {mean_score}, std_dev {std_dev}, suspicion_factor {suspicion_factor}")
+
+        logger.info(
+            f"Calculated suspicion factor for user {self.user.id} on article {self.article.pk}: {suspicion_factor}")
+
+        return min(suspicion_factor, 1.0)

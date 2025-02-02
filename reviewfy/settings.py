@@ -141,7 +141,7 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'update_article_scores_every_1_minute': {
         'task': 'articles.tasks.process_new_ratings',
-        'schedule': 60.0,
+        'schedule': 30.0,
     },
 }
 
