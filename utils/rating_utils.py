@@ -1,6 +1,9 @@
+import logging
+
 from articles.models import Rating
-from articles.tasks import logger
 from utils.redis_utils import delete_user_rating_from_redis
+
+logger = logging.getLogger(__name__)
 
 
 def process_redis_ratings(article, new_ratings):

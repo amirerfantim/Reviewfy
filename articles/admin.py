@@ -9,7 +9,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
 
 class RatingAdmin(admin.ModelAdmin):
-    list_display = ('user', 'article', 'score', 'created_at')
+    list_display = ('user', 'article', 'score', 'suspicion_factor', 'created_at')
     search_fields = ('user__username', 'article__title')
     list_filter = ('score', 'created_at')
 
