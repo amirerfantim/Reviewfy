@@ -62,6 +62,6 @@ class RatingCreateView(generics.CreateAPIView):
         if score < 0 or score > 5:
             return Response({"detail": "Score must be between 0 and 5."}, status=status.HTTP_400_BAD_REQUEST)
 
-        add_rating_to_redis(article_id, user.id, score)
+        add_rating_to_redis(article_id, user.id, score, rating_type='unprocessed')
 
         return Response({"detail": "Rating added successfully."}, status=status.HTTP_201_CREATED)

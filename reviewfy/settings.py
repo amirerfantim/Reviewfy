@@ -132,16 +132,26 @@ USE_TZ = True
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
+SUSPICION_THRESHOLD = 0.2
+
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
 CELERY_TIMEZONE = 'UTC'
 
 CELERY_BEAT_SCHEDULE = {
-    'update_article_scores_every_1_minute': {
-        'task': 'articles.tasks.process_new_ratings',
+    'process_suspicious_ratings_every_3_minute': {
+        'task': 'articles.tasks.process_suspicious_ratings',
+        'schedule': 120.0,
+    },
+    'process_redis_ratings_every_30_seconds': {
+        'task': 'articles.tasks.process_unprocessed_ratings',
         'schedule': 30.0,
+    },
+    'process_normal_ratings_every_2_minute': {
+        'task': 'articles.tasks.process_normal_ratings',
+        'schedule': 120.0,
     },
 }
 

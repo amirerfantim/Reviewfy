@@ -44,18 +44,16 @@ class Rating(models.Model):
         return f"{self.user.username} - {self.article.title} - {self.score}"
 
     @classmethod
-    def update_or_create_rating(cls, user_id, article, score):
+    def update_or_create_rating(cls, user_id, article, score, suspicion_factor):
         previous_rating = cls.objects.filter(user_id=user_id, article=article).first()
         if previous_rating:
             rating_diff = int(score) - previous_rating.score
             previous_rating.score = int(score)
-            previous_rating.suspicion_factor = previous_rating.calculate_suspicion()
+            previous_rating.suspicion_factor = suspicion_factor
             previous_rating.save(update_fields=['score', 'suspicion_factor'])
             return rating_diff, 0
         else:
-            new_rating = cls.objects.create(user_id=user_id, article=article, score=int(score))
-            new_rating.suspicion_factor = new_rating.calculate_suspicion()
-            new_rating.save(update_fields=['suspicion_factor'])
+            cls.objects.create(user_id=user_id, article=article, score=int(score), suspicion_factor=suspicion_factor)
             return int(score), 1
 
     def calculate_suspicion(self):
