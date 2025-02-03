@@ -1,8 +1,8 @@
-# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
 ENV PYTHONUNBUFFERED 1
 ENV PIP_NO_CACHE_DIR off
+ENV DJANGO_SETTINGS_MODULE=reviewfy.settings
 
 RUN apt-get update && apt-get install -y \
     gcc \
@@ -17,9 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8000
+COPY scripts/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
-ENV PYTHONUNBUFFERED 1
-ENV DJANGO_SETTINGS_MODULE=reviewfy.settings
+EXPOSE 8000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "reviewfy.wsgi:application"]
