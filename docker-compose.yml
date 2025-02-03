@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "python manage.py migrate --noinput && gunicorn reviewfy.wsgi:application --bind 0.0.0.0:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    networks:
+      - reviewfy_network
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A reviewfy worker --loglevel=info
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    networks:
+      - reviewfy_network
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A reviewfy beat --loglevel=info
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    networks:
+      - reviewfy_network
+
+  redis:
+    image: redis:6
+    networks:
+      - reviewfy_network
+
+  db:
+    image: postgres:13
+    env_file:
+      - .env
+    networks:
+      - reviewfy_network
+    volumes:
+      - reviewfy_pgdata:/var/lib/postgresql/data
+
+networks:
+  reviewfy_network:
+    driver: bridge
+
+volumes:
+  reviewfy_pgdata:
