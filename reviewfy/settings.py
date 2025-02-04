@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-qftxg6)v&mv_wvhjif^v$8s8b*$f15xwxp@^0&%ecoxea2*nb*')
+SECRET_KEY = os.getenv('SECRET_KEY', 'secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
@@ -45,8 +45,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_TOKEN_LIFETIME', 12 * 60))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_LIFETIME', 7))),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
@@ -94,6 +94,18 @@ DATABASES = {
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('REDIS_CACHE_LOCATION', 'redis://localhost:6379/2'),
+    }
+}
+
+CACHE_ENABLED = os.getenv('CACHE_ENABLED', 'True') == 'True'
+CACHE_DEFAULT_TIMEOUT = int(os.getenv('CACHE_DEFAULT_TIMEOUT', 120))
+ARTICLES_LIST_CACHE_TIMEOUT=int(os.getenv('ARTICLES_LIST_CACHE_TIMEOUT', 60))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
