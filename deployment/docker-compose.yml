@@ -3,14 +3,14 @@ version: '3.8'
 services:
   web:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile:  deployment/Dockerfile
     command: bash -c "/wait-for-it.sh db:5432 -- python manage.py migrate --noinput && gunicorn reviewfy.wsgi:application --bind 0.0.0.0:8000"
     depends_on:
       - db
       - redis
     env_file:
-      - .env
+      - ../.env
     ports:
       - "8000:8000"
     networks:
@@ -18,27 +18,27 @@ services:
 
   celery:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: deployment/Dockerfile
     command: celery -A reviewfy worker --loglevel=info
     depends_on:
       - redis
       - db
     env_file:
-      - .env
+      - ../.env
     networks:
       - reviewfy_network
 
   celery-beat:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: deployment/Dockerfile
     command: celery -A reviewfy beat --loglevel=info
     depends_on:
       - redis
       - db
     env_file:
-      - .env
+      - ../.env
     networks:
       - reviewfy_network
 
@@ -50,7 +50,7 @@ services:
   db:
     image: postgres:13
     env_file:
-      - .env
+      - ../.env
     networks:
       - reviewfy_network
     volumes:
