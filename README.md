@@ -156,10 +156,6 @@ Now, you can access the application at `http://127.0.0.1:8000`.
 - If the suspicion factor is below the threshold, the rating is processed normally.
 - The system applies only 20% of the older ratings each time to ensure that a sudden surge in ratings (like a spam attack) doesn't drastically alter the average score. 
 
-Thanks for the clarification! Here’s the updated explanation for the **Hourly Rating Fluctuation** factor in the **Reviewfy** project, reflecting that the comparison is made with the same time on the previous day, rather than the previous hour:
-
-
-
 ### **Suspicion Factor Calculation Explained**
 
 The **suspicion factor** for each rating is calculated based on the following factors:
