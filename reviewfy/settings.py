@@ -148,7 +148,7 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:63
 CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE", "UTC")
 
 CELERY_BEAT_SCHEDULE = {
-    'process_suspicious_ratings_every_3_minute': {
+    'process_suspicious_ratings_every_2_minute': {
         'task': 'articles.tasks.process_suspicious_ratings',
         'schedule': 120.0,
     },
@@ -156,9 +156,9 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'articles.tasks.process_unprocessed_ratings',
         'schedule': 30.0,
     },
-    'process_normal_ratings_every_2_minute': {
+    'process_normal_ratings_every_1_minute': {
         'task': 'articles.tasks.process_normal_ratings',
-        'schedule': 120.0,
+        'schedule': 60.0,
     },
 }
 
