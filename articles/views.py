@@ -1,6 +1,8 @@
+from django.conf import settings
 from rest_framework import generics
 
-from utils.redis_utils import add_rating_to_redis, get_user_rating_from_redis, delete_user_rating_from_redis
+from utils.cache_utils import get_or_set_cache
+from utils.redis_utils import add_rating_to_redis
 from .serializers import ArticleSerializer
 from rest_framework.permissions import IsAuthenticated
 from .models import Rating, Article
@@ -15,7 +17,7 @@ class ArticleListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        articles = self.get_queryset()
+        articles = get_or_set_cache('articles_list', self.get_queryset(), timeout=settings.ARTICLES_LIST_CACHE_TIMEOUT)
         response_data = []
 
         for article in articles:

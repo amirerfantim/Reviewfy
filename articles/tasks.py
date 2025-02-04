@@ -1,8 +1,8 @@
 import logging
 from celery import shared_task
+from django.conf import settings
 from django.contrib.auth.models import User
 
-from reviewfy import settings
 from utils.rating_utils import calculate_suspicion
 from .models import Article, Rating
 from utils.redis_utils import get_ratings_from_redis, add_rating_to_redis, delete_user_rating_from_redis
